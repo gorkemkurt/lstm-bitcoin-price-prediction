@@ -1,0 +1,5 @@
+/venv/
+/plots/
+.idea/
+__pycache__/
+/notes.txt
