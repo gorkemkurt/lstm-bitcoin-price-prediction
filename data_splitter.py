@@ -13,7 +13,6 @@ class DataSplitter:
         return train, validate, test
 
     def train_validate_test_split_random(self, train_percent=.6, validate_percent=.2, seed=None):
-        # train, validate, test = np.split(self.df.sample(frac=1), [int(.6 * len(self.df)), int(.8 * len(self.df))])
         np.random.seed(seed)
         perm = np.random.permutation(self.df.index)
         m = len(self.df.index)
@@ -24,10 +23,30 @@ class DataSplitter:
         test = self.df.iloc[perm[validate_end:]]
         return train, validate, test
 
-    def get_XY_sets(self, min_max_scaler):
+    def get_XY_sets(self, min_max_scaler, n_in, n_out):
+        x, y = [], []
         training_set = self.df.values
         training_set = min_max_scaler.fit_transform(training_set)
-        x_set = training_set[0:len(training_set) - 1]
-        y_set = training_set[1:len(training_set)]
-        x_set = np.reshape(x_set, (len(x_set), 1, 1))
-        return x_set, y_set
+        for i in range(len(training_set)):
+            end = i + n_in
+            out_end = end + n_out
+            if out_end > len(training_set):
+                break
+            seq_x, seq_y = training_set[i:end], training_set[end:out_end]
+            x.append(seq_x)
+            y.append(seq_y)
+        x = np.reshape(x, (len(x), n_in, 1))
+        y = np.reshape(y, (len(y), n_out))
+        return x, y
+
+    def split_sequence(self, n_steps_in, n_steps_out):
+        x, y = [], []
+        for i in range(len(self.df)):
+            end = i + n_steps_in
+            out_end = end + n_steps_out
+            if out_end > len(self.df):
+                break
+            seq_x, seq_y = self.df[i:end], self.df[end:out_end]
+            x.append(seq_x)
+            y.append(seq_y)
+        return np.array(x), np.array(y)
